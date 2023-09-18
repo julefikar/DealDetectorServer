@@ -1,0 +1,2 @@
+# DealDetectorServer
+DealDetector - Backend / Serverside
