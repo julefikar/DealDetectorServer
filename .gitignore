@@ -5,6 +5,7 @@ venv/
 __pycache__/
 
 # Local development settings
+dev.env
 .env
 .env.local
 
