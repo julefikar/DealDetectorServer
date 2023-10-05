@@ -20,14 +20,14 @@ def get_price_data():
         'values': 'Iphone 12 blue'
     }
 
-    response = requests.post('https://api.priceapi.com/v2/jobs', data=data)
+    post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)
+    job_id = post_response.json()['job_id']
     
-    #GET REQUEST IN FOLLOWING FORMAT
-    #https://api.priceapi.com/v2/jobs/1234567890abcdef12345678?token=$PRICEAPI_TOKEN
+    response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}?token={token}')
 
     if response.status_code == 200:
         return jsonify(response.json())
-    return jsonify({'error': 'Failed to retrieve data from external API'}), response.status_code
+    return jsonify({'error': 'Failed to retrieve data from Price API'}), response.status_code
 
-    if __name__ == '__main__':
-        app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
