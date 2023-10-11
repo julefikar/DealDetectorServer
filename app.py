@@ -1,9 +1,15 @@
 import requests
 from flask import Flask, request, jsonify
+import json
+import time
 
 app = Flask(__name__)
 
-@app.route('/get_price_data', methods = ['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
+def hello_world():
+    return 'Hello, World'
+
+@app.route('/get_price_data', methods=['GET', 'POST'])
 def get_price_data():
     token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
     data = {
@@ -17,16 +23,25 @@ def get_price_data():
         'sort_by': 'ranking_descending',
         'condition': 'any',
         'shipping': 'any',
-        'values': 'Iphone 12 blue'
+        'values': 'Real Madrid jersey'
     }
 
-    post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)
+    post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
     job_id = post_response.json()['job_id']
-    
-    response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}?token={token}')
+
+
+    time.sleep(5)
+
+
+    response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}')
 
     if response.status_code == 200:
-        return jsonify(response.json())
+        try:
+            json_data = json.loads(response.text)
+            return jsonify(json_data)
+        except json.JSONDecodeError as e:
+            return jsonify({'error': f'Failed to parse JSON: {str(e)}'}), 500
+
     return jsonify({'error': 'Failed to retrieve data from Price API'}), response.status_code
 
 if __name__ == '__main__':
