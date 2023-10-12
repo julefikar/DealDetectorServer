@@ -23,7 +23,7 @@ def get_price_data():
         'sort_by': 'ranking_descending',
         'condition': 'any',
         'shipping': 'any',
-        'values': 'Real Madrid jersey'
+        'values': 'Black jeans'
     }
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
