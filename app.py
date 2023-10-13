@@ -20,29 +20,31 @@ def get_price_data():
         'key': 'term',
         'max_age': '1200',
         'max_pages': '1',
-        'sort_by': 'ranking_descending',
+        'sort_by': 'price_ascending',
         'condition': 'any',
         'shipping': 'any',
-        'values': 'Black jeans'
+        'values': 'Black Jeans'
     }
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
     job_id = post_response.json()['job_id']
 
+    time_alloted, max_time = 0, 60
+    while True:
+        response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}')
 
-    time.sleep(5)
-
-
-    response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}')
-
-    if response.status_code == 200:
-        try:
-            json_data = json.loads(response.text)
-            return jsonify(json_data)
-        except json.JSONDecodeError as e:
-            return jsonify({'error': f'Failed to parse JSON: {str(e)}'}), 500
-
-    return jsonify({'error': 'Failed to retrieve data from Price API'}), response.status_code
+        if response.status_code == 200:
+            try:
+                json_data = json.loads(response.text)
+                print(f'Time needed: {time_alloted}s')
+                return jsonify(json_data)
+            except json.JSONDecodeError as e:
+                return jsonify({'error': f'Failed to parse JSON: {str(e)}'}), 500
+        elif time_alloted == max_time: 
+            return jsonify({'error': 'Failed to retrieve data from Price API'}), response.status_code
+        
+        time.sleep(2)
+        time_alloted += 2 
 
 if __name__ == '__main__':
     app.run(debug=True)
