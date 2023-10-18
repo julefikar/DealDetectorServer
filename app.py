@@ -1,9 +1,11 @@
 import requests
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import time
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def hello_world():
@@ -12,6 +14,7 @@ def hello_world():
 @app.route('/get_price_data', methods=['GET', 'POST'])
 def get_price_data():
     token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
+    search_query = request.json.get('searchQuery', '')
     data = {
         'token': token,
         'country': 'us',
@@ -23,7 +26,7 @@ def get_price_data():
        # 'sort_by': 'price_ascending',
         'condition': 'any',
         'shipping': 'any',
-        'values': 'Mens light blue jeans'
+        'values': search_query
     }
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
