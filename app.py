@@ -23,7 +23,7 @@ def get_price_data():
        # 'sort_by': 'price_ascending',
         'condition': 'any',
         'shipping': 'any',
-        'values': 'Argentina National Team Jersey'
+        'values': 'Mens light blue jeans'
     }
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
