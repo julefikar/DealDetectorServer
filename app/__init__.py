@@ -14,4 +14,4 @@ def get_mongo_client():
     client = MongoClient(uri, tlsCAFile=certifi.where())
     return client
 
-from app import routes  # Import routes after the app is created to avoid circular imports.
+from app import app  # Import routes after the app is created to avoid circular imports.
