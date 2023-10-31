@@ -21,7 +21,7 @@ def get_mongo_client():
 @app.route('/get_price_data', methods=['GET', 'POST'])
 def get_price_data():
     token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
-    search_query = request.json.get('searchQuery', '')
+    query = request.json.get('searchQuery', '')
     data = {
         'token': token,
         'country': 'us',
@@ -33,7 +33,7 @@ def get_price_data():
        # 'sort_by': 'price_ascending',
         'condition': 'any',
         'shipping': 'any',
-        'values': search_query
+        'values': query
     }
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
