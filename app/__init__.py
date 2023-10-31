@@ -1,14 +1,10 @@
 import certifi
-from flask import Flask, request, jsonify
+from flask import Flask
 from pymongo import MongoClient
-from flask_cors import CORS
-import json
-import time
-import requests 
+from flask_cors import CORS 
 
 app = Flask(__name__)
 app.config.from_pyfile('../dev.env')
-CORS(app)
 
 # Set up CORS for the app, for proper API calls
 CORS(app)  
@@ -17,6 +13,7 @@ def get_mongo_client():
     uri = app.config['MONGODB_URI']
     client = MongoClient(uri, tlsCAFile=certifi.where())
     return client
+
 
 @app.route('/get_price_data', methods=['GET', 'POST'])
 def get_price_data():
@@ -58,5 +55,6 @@ def get_price_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 from app import routes  # Import routes after the app is created to avoid circular imports.
