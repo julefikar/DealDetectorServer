@@ -65,20 +65,20 @@ def login():
 @app.route('/get_price_data', methods=['GET', 'POST'])
 def get_price_data():
     token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
-    search_query = request.json.get('searchQuery', '')
+    search_query = request.get_json().get('searchQuery', '')
     data = {
-        'token': token,
+        'token': 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG',
         'country': 'us',
         'source': 'google_shopping',
         'topic': 'product_and_offers',
         'key': 'term',
         'max_age': '1200',
         'max_pages': '1',
-       # 'sort_by': 'price_ascending',
         'condition': 'any',
         'shipping': 'any',
-        'values': search_query
+        'values': search_query, 
     }
+
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
     job_id = post_response.json()['job_id']
