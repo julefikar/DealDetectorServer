@@ -142,7 +142,7 @@ def get_price_data():
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
     job_id = post_response.json()['job_id']
 
-    time_alloted, max_time = 0, 60
+    time_alloted, max_time = 0, 30
     while time_alloted < max_time:
         response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}')
 
@@ -156,8 +156,8 @@ def get_price_data():
         elif time_alloted == max_time: 
             return jsonify({'error': 'Failed to retrieve data from Price API'}), response.status_code
         
-        time.sleep(2)
-        time_alloted += 2 
+        time.sleep(1)
+        time_alloted += 1 
 
 if __name__ == '__main__':
     app.run(debug=True)
