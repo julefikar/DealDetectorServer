@@ -8,9 +8,68 @@ import bcrypt
 from pymongo import MongoClient
 import certifi
 
+from algoliasearch.search_client import SearchClient
+#python -m pip install --upgrade algoliasearch
+
 app = Flask(__name__)
 CORS(app)
 
+#Server side code for setInterval in sending search analytics
+ALGOLIA_APP_ID = 'QGXKTHTJGY'
+ADMIN_API_KEY = '1819bc16cbfa59f046d7e9bc1260048a'
+newterms_index = 'searchAnalytics'
+search_index = 'searchterms'
+
+search_client = SearchClient.create(ALGOLIA_APP_ID, ADMIN_API_KEY)
+main_index = search_client.init_index(search_index)
+analytics_index = search_client.init_index(newterms_index)
+
+@app.route('/addPopularTerms', methods=['POST'])
+def add_popular_terms():
+    try:
+        terms = request.json.get('terms', [])
+        count_ = request.json.get('count', [])
+        
+        #required no. of searches in order to add to index
+        add_threshold = 10
+        
+        termFound = False
+
+        # Format the data for indexing in the main search index
+        for index, term in enumerate(terms):
+            if(len(term) <= 20):
+                try:
+                    get_count = analytics_index.get_object(f'term_{term}')
+                    search_count = get_count['count']
+                    termFound = True
+                except Exception as e:
+                    termFound = False
+                    
+                if(termFound == True):
+                    if(search_count >= add_threshold) :
+                        record = [{"objectID": f'term_{term}', "search_term": term, "source": "dealdetector"}]
+                        main_index.save_objects(record)
+                    else:
+                        analytics_index.partial_update_object({
+                            'count': { '_operation': 'Increment', 'value': 1 },
+                            'objectID': f'term_{term}'
+                        })
+                else:
+                    record = [{"objectID": f'term_{term}', "search_term": term, "count": count_[index]}]
+                    analytics_index.save_objects(record)
+                
+        return jsonify({'success': True, "Terms": terms})
+    except Exception as e:
+        print(e)
+        return jsonify({"success": False, "error": "term already added or could not be added"}), 500
+    
+@app.after_request
+def set_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'  # Adjust the origin
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+#end of analytics code
 
 @app.route('/')
 def hello_world():
