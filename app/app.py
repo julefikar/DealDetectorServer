@@ -65,7 +65,7 @@ def login():
 @app.route('/get_price_data', methods=['GET', 'POST'])
 def get_price_data():
     token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
-    search_query = request.get_json().get('searchQuery', '')
+    search_query = request.json.get('searchQuery', '')
     data = {
         'token': 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG',
         'country': 'us',
