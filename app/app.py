@@ -121,9 +121,11 @@ def login():
     else:
         return jsonify({"error": "Invalid password"}), 400
 
-@app.route('/get_price_data', methods=['GET', 'POST'])
-def get_price_data():
-    token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
+token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
+
+@app.route('/search', methods=['POST'])
+def search():
+    global job_id
     search_query = request.json.get('searchQuery', '')
     data = {
         'token': token,
@@ -133,7 +135,7 @@ def get_price_data():
         'key': 'term',
         'max_age': '1200',
         'max_pages': '1',
-       # 'sort_by': 'price_ascending',
+        # 'sort_by': 'price_ascending',
         'condition': 'any',
         'shipping': 'any',
         'values': search_query
@@ -141,16 +143,42 @@ def get_price_data():
 
     post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
     job_id = post_response.json()['job_id']
+    return job_id
 
-    time_alloted, max_time = 0, 30
+@app.route('/results', methods=['GET'])
+def results():
+    global job_id
+    time_alloted, max_time = 0, 20
     while time_alloted < max_time:
         response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}')
 
         if response.status_code == 200:
             try:
                 json_data = json.loads(response.text)
+                offers = json_data['results'][0]['content']['offers']
+                if not offers:
+                    return jsonify({'error': 'No offers found'}), 404
+
+                cheapest_offer = min(offers, key = lambda x: float(x['price']))
+                product_info = json_data['results'][0]['content']
+
+                cheapest_product = {
+                    'name': product_info['name'],
+                    'description': product_info['description'],
+                    'image_url': product_info['image_url'],
+                    'price': cheapest_offer['price'],
+                    'price_with_shipping': cheapest_offer['price_with_shipping'],
+                }
+
+                offer_info = [[offer['url'], offer['price']] for offer in offers]
+
+                result_data = {
+                    'cheapest_product': cheapest_product,
+                    'offers': offer_info
+                }
+
                 print(f'Time needed: {time_alloted}s')
-                return jsonify(json_data)
+                return jsonify(result_data)
             except json.JSONDecodeError as e:
                 return jsonify({'error': f'Failed to parse JSON: {str(e)}'}), 500
         elif time_alloted == max_time: 
