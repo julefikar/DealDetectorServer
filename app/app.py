@@ -12,7 +12,13 @@ from algoliasearch.search_client import SearchClient
 #python -m pip install --upgrade algoliasearch
 
 app = Flask(__name__)
+app.config.from_pyfile('../dev.env')
 CORS(app)
+
+def get_mongo_client():
+    uri = app.config['MONGODB_URI']
+    client = MongoClient(uri, tlsCAFile=certifi.where())
+    return client
 
 #Server side code for setInterval in sending search analytics
 ALGOLIA_APP_ID = 'QGXKTHTJGY'
