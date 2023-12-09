@@ -155,6 +155,7 @@ def results():
         if response.status_code == 200:
             try:
                 json_data = json.loads(response.text)
+
                 offers = json_data['results'][0]['content']['offers']
                 if not offers:
                     return jsonify({'error': 'No offers found'}), 404
@@ -168,6 +169,10 @@ def results():
                     'image_url': product_info['image_url'],
                     'price': cheapest_offer['price'],
                     'price_with_shipping': cheapest_offer['price_with_shipping'],
+                    'url': cheapest_offer['url'],
+                    'review_count': product_info['review_count'],
+                    'rating': product_info['review_rating'] if product_info['review_rating'] else 0,
+                    'id': product_info['id'],
                 }
 
                 offer_info = [[offer['url'], offer['price']] for offer in offers]
