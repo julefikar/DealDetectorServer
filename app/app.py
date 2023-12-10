@@ -8,6 +8,8 @@ from datetime import datetime
 import bcrypt
 from pymongo import MongoClient
 import certifi
+import asyncio
+import aiohttp
 
 from algoliasearch.search_client import SearchClient
 #python -m pip install --upgrade algoliasearch
@@ -131,30 +133,43 @@ def login():
 token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
 
 @app.route('/search', methods=['POST'])
-def search():
-    global job_id
+async def search():
+    global job_ids
     search_query = request.json.get('searchQuery', '')
+    source_list = ['google_shopping', 'amazon', 'ebay']
+
+    job_ids = {}
+
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_job_id(session, source, search_query) for source in source_list]
+        job_ids = await asyncio.gather(*tasks)
+    
+    return jsonify(job_ids)
+
+async def fetch_job_id(session, source, search_query):
     data = {
         'token': token,
         'country': 'us',
-        'source': 'google_shopping',
+        'source': source,
         'topic': 'product_and_offers',
         'key': 'term',
         'max_age': '1200',
         'max_pages': '1',
         # 'sort_by': 'price_ascending',
         'condition': 'any',
-        'shipping': 'any',
+        #'shipping': 'any',
         'values': search_query
     }
 
-    post_response = requests.post('https://api.priceapi.com/v2/jobs', data=data)   
-    job_id = post_response.json()['job_id']
-    return job_id
+    async with session.post('https://api.priceapi.com/v2/jobs', data=data) as response:
+        result = await response.json()
+        print({source: result['job_id']})
+        return {source: result['job_id']}
 
+'''
 @app.route('/results', methods=['GET'])
 def results():
-    global job_id
+    global job_ids
     time_alloted, max_time = 0, 20
     while time_alloted < max_time:
         response = requests.get(f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}')
@@ -198,7 +213,7 @@ def results():
         
         time.sleep(1)
         time_alloted += 1 
-
+'''
 @app.route('/add-favorite', methods=['POST'])
 def add_favorite():
     client = get_mongo_client()
