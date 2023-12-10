@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests 
+from bson import json_util
 import json
 import time
 from datetime import datetime
@@ -198,6 +199,49 @@ def results():
         time.sleep(1)
         time_alloted += 1 
 
+@app.route('/add-favorite', methods=['POST'])
+def add_favorite():
+    client = get_mongo_client()
+    db = client['DealDetector']
+    favorites_collection = db['favorites']
+
+    favorite_data = request.json
+
+    try:
+        # Insert the favorite product into the 'favorites' collection
+        favorites_collection.insert_one(favorite_data)
+        return jsonify({"message": "Favorite added successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/remove-favorite', methods=['POST'])
+def remove_favorite():
+    client = get_mongo_client()
+    db = client['DealDetector']
+    favorites_collection = db['favorites']
+
+    favorite_data = request.json
+
+    try:
+        favorites_collection.delete_one({"id": favorite_data['id']})
+        return jsonify({"message": "Favorite removed successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get-favorites', methods=['GET'])
+def get_favorites():
+    client = get_mongo_client()
+    db = client['DealDetector']  # Replace with your database name
+    favorites_collection = db['favorites']
+
+    try:
+        favorites = list(favorites_collection.find({}))
+        # Serialize the MongoDB data to JSON
+        return json.dumps(favorites, default=json_util.default), 200
+    except Exception as e:
+        print("Error occurred:", e)  # Log the error
+        return jsonify({"error": str(e)}), 500
+        
 if __name__ == '__main__':
     app.run(debug=True)
 
