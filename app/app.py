@@ -206,9 +206,10 @@ def add_favorite():
     favorites_collection = db['favorites']
 
     favorite_data = request.json
+    user_id = favorite_data.get('userId')  # Get user ID from the request data
 
     try:
-        # Insert the favorite product into the 'favorites' collection
+        favorite_data['userId'] = user_id  # Add user ID to the favorite data
         favorites_collection.insert_one(favorite_data)
         return jsonify({"message": "Favorite added successfully"}), 200
     except Exception as e:
@@ -221,27 +222,28 @@ def remove_favorite():
     favorites_collection = db['favorites']
 
     favorite_data = request.json
+    user_id = favorite_data.get('userId')  # Get user ID from the request data
 
     try:
-        favorites_collection.delete_one({"id": favorite_data['id']})
+        # Ensure both product ID and user ID match
+        favorites_collection.delete_one({"id": favorite_data['id'], "userId": user_id})
         return jsonify({"message": "Favorite removed successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-favorites', methods=['GET'])
-def get_favorites():
+@app.route('/get-favorites/<user_id>', methods=['GET'])
+def get_favorites(user_id):
     client = get_mongo_client()
-    db = client['DealDetector']  # Replace with your database name
+    db = client['DealDetector']
     favorites_collection = db['favorites']
 
     try:
-        favorites = list(favorites_collection.find({}))
-        # Serialize the MongoDB data to JSON
+        favorites = list(favorites_collection.find({"userId": user_id}))
         return json.dumps(favorites, default=json_util.default), 200
     except Exception as e:
-        print("Error occurred:", e)  # Log the error
+        print("Error occurred:", e)
         return jsonify({"error": str(e)}), 500
-        
+       
 if __name__ == '__main__':
     app.run(debug=True)
 
