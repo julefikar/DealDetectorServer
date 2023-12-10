@@ -118,9 +118,9 @@ def login():
     db = client['DealDetector'] 
     users_collection = db['users']
 
-    user = users_collection.find_one({'username': data['username']})
+    user = users_collection.find_one({"$or": [{"username": data['username']}, {"email": data['username']}]})
     if not user:
-        return jsonify({"error": "Username not found"}), 400
+        return jsonify({"error": "User not found"}), 400
 
     # Verify password
     if bcrypt.checkpw(data['password'].encode('utf-8'), user['password']):
