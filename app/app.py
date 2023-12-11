@@ -134,16 +134,16 @@ token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
 
 @app.route('/search', methods=['POST'])
 async def search():
-    global job_ids
     search_query = request.json.get('searchQuery', '')
     source_list = ['google_shopping', 'amazon', 'ebay']
 
-    job_ids = {}
+    global job_ids
 
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_job_id(session, source, search_query) for source in source_list]
         job_ids = await asyncio.gather(*tasks)
     
+    print(f'ids: {job_ids}')
     return jsonify(job_ids)
 
 async def fetch_job_id(session, source, search_query):
@@ -165,6 +165,60 @@ async def fetch_job_id(session, source, search_query):
         result = await response.json()
         print({source: result['job_id']})
         return {source: result['job_id']}
+
+async def fetch_data(session, job_id):
+     url = f'https://api.priceapi.com/v2/jobs/{job_id}/download?token={token}'
+    
+     async with session.get(url) as response:
+        data = await response.json()
+        print(data)
+        return data
+
+@app.route('/results', methods=['GET'])
+async def results():
+    global job_ids
+    time_allotted, max_time = 0, 20
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for d in job_ids:
+            job_id = d.get('google_shopping', '')
+            tasks.append(fetch_data(session, job_id))
+
+            job_id = d.get('amazon', '')
+            tasks.append(fetch_data(session, job_id))
+
+            job_id = d.get('ebay', '')
+            tasks.append(fetch_data(session, job_id))
+
+        responses = await asyncio.gather(*tasks)
+
+        while time_allotted < max_time:
+            completed_jobs = 0
+
+            for response in responses:
+                try:
+                    json_data = response
+
+                    # Check if the job is finished
+                    if json_data['status'] == 'finished':
+                        # Your existing parsing logic here
+                        print(json_data)
+                        return jsonify(json_data)
+
+                    completed_jobs += 1
+                except:
+                    pass
+
+            # If all jobs are completed, break from the loop
+            if completed_jobs == len(responses):
+                break
+
+            # If not all jobs are completed, wait for 1 second and increment time_allotted
+            time.sleep(1)
+            time_allotted += 1
+
+        # If no successful response is received within the allotted time, return an error
+        return jsonify({'error': 'Failed to retrieve data from Price API within the time limit'}), 500
 
 '''
 @app.route('/results', methods=['GET'])
