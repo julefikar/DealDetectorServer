@@ -131,13 +131,13 @@ def login():
         return jsonify({"error": "Invalid password"}), 400
 
 token = 'OCNXKSNMBFLRRLWZWANKMIOLWSVWEAUYBCHWCADJLMYTVBAVKKNJGPFNZLUDXTVG'
+job_ids = []
 
 @app.route('/search', methods=['POST'])
 async def search():
+    global job_ids
     search_query = request.json.get('searchQuery', '')
     source_list = ['google_shopping', 'amazon', 'ebay']
-
-    global job_ids
 
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_job_id(session, source, search_query) for source in source_list]
@@ -177,7 +177,7 @@ async def fetch_data(session, job_id):
 @app.route('/results', methods=['GET'])
 async def results():
     global job_ids
-    time_allotted, max_time = 0, 20
+    time_allotted, max_time = 0, 60
     async with aiohttp.ClientSession() as session:
         tasks = []
         for d in job_ids:
@@ -214,11 +214,12 @@ async def results():
                 break
 
             # If not all jobs are completed, wait for 1 second and increment time_allotted
-            time.sleep(1)
+            await asyncio.sleep(1)
             time_allotted += 1
 
         # If no successful response is received within the allotted time, return an error
         return jsonify({'error': 'Failed to retrieve data from Price API within the time limit'}), 500
+
 
 '''
 @app.route('/results', methods=['GET'])
