@@ -211,12 +211,13 @@ async def results():
 
             # If all jobs are completed, break from the loop
             if completed_jobs == len(responses):
+                job_ids = []
                 break
 
             # If not all jobs are completed, wait for 1 second and increment time_allotted
             await asyncio.sleep(1)
             time_allotted += 1
-
+        job_ids = []
         # If no successful response is received within the allotted time, return an error
         return jsonify({'error': 'Failed to retrieve data from Price API within the time limit'}), 500
 
